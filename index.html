@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Fórmula da Atenção 2.0 — Magno Agner</title>
+<meta name="theme-color" content="#181A1D">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ── IDENTIDADE 2.0 · MAGNO AGNER ── */
+  :root {
+    --grafite: #181A1D;
+    --marfim: #F3EFE6;
+    --laranja: #D86A3C;
+    --carvao: #2A2D32;
+    --areia: #E4DCCB;
+    --telha: #A84E27;
+    --pedra: #5E626A;
+    --nevoa: #9A9EA5;
+
+    --pad: 24px;
+    --sec: 112px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--grafite);
+    color: var(--marfim);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  img, svg { display: block; }
+  strong { font-weight: 700; }
+
+  /* ── UTILITY ── */
+  .container { max-width: 1080px; margin: 0 auto; padding: 0 var(--pad); }
+  .dark  { background: var(--grafite); color: var(--marfim); }
+  .light { background: var(--marfim); color: var(--grafite); }
+  .accent { color: var(--laranja); }
+  .sec { padding: var(--sec) 0; }
+
+  /* Etiqueta: quadradinho laranja + caixa alta espaçada */
+  .label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .label::before {
+    content: '';
+    width: 10px; height: 10px;
+    background: var(--laranja);
+    flex-shrink: 0;
+  }
+
+  /* Topo de seção: etiqueta + numeração + fio fino (como nos carrosséis) */
+  .sec-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 18px;
+    margin-bottom: 56px;
+    border-bottom: 1px solid currentColor;
+    border-color: var(--rule);
+  }
+  .dark  { --rule: rgba(243,239,230,0.14); --muted: var(--nevoa); --surface: var(--carvao); }
+  .light { --rule: var(--areia); --muted: var(--pedra); --surface: #EBE5D8; }
+  .sec-num {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Títulos */
+  .h2 {
+    font-size: clamp(34px, 5.4vw, 60px);
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    max-width: 16ch;
+  }
+
+  /* Marca-texto laranja atrás da parte de baixo das letras */
+  .mark {
+    background: linear-gradient(to top,
+      transparent 0.06em,
+      var(--laranja) 0.06em,
+      var(--laranja) 0.36em,
+      transparent 0.36em);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    padding: 0 0.04em;
+  }
+
+  /* Texto de apoio com fio vertical laranja */
+  .support {
+    border-left: 3px solid var(--laranja);
+    padding-left: 22px;
+    font-size: clamp(17px, 2vw, 20px);
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 560px;
+  }
+  .support strong { color: inherit; }
+  .dark .support strong { color: var(--marfim); }
+  .light .support strong { color: var(--grafite); }
+
+  /* Triângulo do monograma como marcador */
+  .tri {
+    width: 14px; height: 10.5px;
+    background: var(--laranja);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    flex-shrink: 0;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+  @keyframes progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes marqueeMove { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .fade-up { animation: fadeUp 0.8s cubic-bezier(.2,.7,.2,1) both; }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.22s; }
+  .delay-3 { animation-delay: 0.36s; }
+  .delay-4 { animation-delay: 0.5s; }
+
+  /* ── CTA BUTTON (texto sobre laranja sempre em grafite) ── */
+  .btn-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: var(--laranja);
+    color: var(--grafite);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 20px 36px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+  .btn-cta::after {
+    content: '→';
+    font-size: 18px;
+    line-height: 1;
+    transition: transform 0.2s;
+  }
+  .btn-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 40px rgba(216,106,60,0.35);
+  }
+  .btn-cta:hover::after { transform: translateX(4px); }
+  .btn-cta:focus-visible { outline: 2px solid var(--marfim); outline-offset: 3px; }
+  .light .btn-cta:focus-visible { outline-color: var(--grafite); }
+  .btn-sub {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 14px;
+  }
+
+  /* ── MARQUEE ── */
+  .marquee-wrap {
+    background: var(--laranja);
+    overflow: hidden;
+    padding: 11px 0;
+    white-space: nowrap;
+  }
+  .marquee-track {
+    display: inline-block;
+    animation: marqueeMove 28s linear infinite;
+  }
+  .marquee-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 28px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--grafite);
+    padding-left: 28px;
+  }
+  .marquee-item::after {
+    content: '';
+    width: 7px; height: 7px;
+    background: var(--grafite);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+
+  /* ── HEADER ── */
+  .site-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 28px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .logo { color: var(--marfim); width: 210px; height: auto; }
+  .light .logo { color: var(--grafite); }
+  .header-tag { color: var(--nevoa); }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    right: -10%;
+    top: 10%;
+    width: 60%;
+    height: 80%;
+    background: radial-gradient(closest-side, rgba(216,106,60,0.13), transparent);
+    pointer-events: none;
+  }
+  .hero-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.35fr 0.65fr;
+    gap: 56px;
+    align-items: end;
+    min-height: calc(100vh - 130px);
+    padding: 72px 0 96px;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--laranja);
+    color: var(--grafite);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 7px 14px;
+    margin-bottom: 32px;
+  }
+  .hero-badge::before {
+    content: '';
+    width: 8px; height: 8px;
+    background: var(--grafite);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+  .hero h1 {
+    font-size: clamp(54px, 10.5vw, 128px);
+    font-weight: 800;
+    line-height: 0.92;
+    letter-spacing: -0.045em;
+    margin-bottom: 40px;
+  }
+  .hero-sub { margin-bottom: 48px; }
+
+  /* Celular abstrato: REC, timecode, barra de progresso */
+  .phone {
+    justify-self: end;
+    width: 100%;
+    max-width: 280px;
+    aspect-ratio: 9 / 18;
+    border: 1px solid rgba(243,239,230,0.16);
+    border-radius: 34px;
+    padding: 10px;
+    background: #121417;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.45);
+  }
+  .phone-screen {
+    position: relative;
+    width: 100%; height: 100%;
+    border-radius: 26px;
+    background:
+      linear-gradient(180deg, rgba(24,26,29,0) 55%, rgba(24,26,29,0.85)),
+      linear-gradient(160deg, #33363c 0%, var(--carvao) 45%, #1e2024 100%);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 22px 18px 20px;
+  }
+  .phone-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    color: var(--marfim);
+    font-variant-numeric: tabular-nums;
+  }
+  .rec { display: inline-flex; align-items: center; gap: 7px; }
+  .rec::before {
+    content: '';
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--laranja);
+    animation: blink 1.2s infinite;
+  }
+  .phone-frame {
+    position: absolute;
+    inset: 64px 26px 90px;
+    pointer-events: none;
+  }
+  .phone-frame span {
+    position: absolute;
+    width: 18px; height: 18px;
+    border-color: rgba(243,239,230,0.5);
+    border-style: solid;
+    border-width: 0;
+  }
+  .phone-frame span:nth-child(1) { top: 0; left: 0; border-top-width: 1.5px; border-left-width: 1.5px; }
+  .phone-frame span:nth-child(2) { top: 0; right: 0; border-top-width: 1.5px; border-right-width: 1.5px; }
+  .phone-frame span:nth-child(3) { bottom: 0; left: 0; border-bottom-width: 1.5px; border-left-width: 1.5px; }
+  .phone-frame span:nth-child(4) { bottom: 0; right: 0; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+  .phone-mono {
+    position: absolute;
+    left: 50%; top: 46%;
+    width: 46%;
+    transform: translate(-50%, -50%);
+    color: var(--marfim);
+    opacity: 0.9;
+  }
+  .phone-bottom { position: relative; z-index: 1; }
+  .phone-caption {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin-bottom: 14px;
+  }
+  .phone-bar {
+    height: 3px;
+    background: rgba(243,239,230,0.18);
+    overflow: hidden;
+  }
+  .phone-bar i {
+    display: block;
+    height: 100%;
+    background: var(--laranja);
+    transform-origin: left;
+    animation: progress 3s linear infinite;
+  }
+
+  /* ── PROBLEM ── */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: start;
+  }
+  .problem .h2 { margin-bottom: 32px; }
+  .problem-list { list-style: none; }
+  .problem-list li {
+    display: flex;
+    gap: 16px;
+    align-items: baseline;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--areia);
+    font-size: 17px;
+    line-height: 1.5;
+  }
+  .problem-list li:first-child { border-top: 1px solid var(--areia); }
+  .problem-list .tri { transform: translateY(1px); }
+
+  /* ── FRASE DE DESTAQUE (modelo 05: laranja, texto grafite) ── */
+  .quote {
+    background: var(--laranja);
+    color: var(--grafite);
+    padding: 120px 0;
+  }
+  .quote blockquote {
+    font-size: clamp(32px, 5.2vw, 64px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    max-width: 18ch;
+    margin-bottom: 36px;
+  }
+  .quote cite {
+    font-style: normal;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* ── STATS ── */
+  .stats { padding: 96px 0; }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .stat-item {
+    padding: 8px 28px;
+    border-left: 1px solid var(--rule);
+  }
+  .stat-item:first-child { border-left: none; padding-left: 0; }
+  .stat-num {
+    font-size: clamp(48px, 6vw, 76px);
+    font-weight: 800;
+    letter-spacing: -0.045em;
+    line-height: 1;
+    margin-bottom: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-num span { color: var(--laranja); font-size: 0.45em; letter-spacing: -0.02em; margin-left: 2px; }
+  .stat-label { font-size: 14px; color: var(--nevoa); line-height: 1.45; }
+
+  /* ── WHAT YOU LEARN ── */
+  .learn .h2 { margin-bottom: 64px; }
+  .chapters-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 64px;
+  }
+  .chapter-item {
+    display: grid;
+    grid-template-columns: 92px 1fr;
+    gap: 8px;
+    padding: 32px 0;
+    border-top: 1px solid var(--areia);
+  }
+  .chapter-num {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    line-height: 0.9;
+    color: var(--grafite);
+  }
+  .chapter-num::after { content: '.'; color: var(--laranja); }
+  .chapter-content h3 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    margin-bottom: 8px;
+  }
+  .chapter-content p { font-size: 15px; color: var(--pedra); line-height: 1.6; }
+
+  /* ── BONUS ── */
+  .bonus .h2 { margin-bottom: 64px; }
+  .bonus-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .bonus-card {
+    background: var(--carvao);
+    padding: 36px 32px;
+    border: 1px solid transparent;
+    transition: border-color 0.25s, transform 0.25s;
+  }
+  .bonus-card:hover { border-color: var(--laranja); transform: translateY(-3px); }
+  .bonus-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 40px;
+  }
+  .bonus-icon { width: 40px; height: 40px; color: var(--laranja); }
+  .bonus-tag { color: var(--nevoa); font-size: 11px; }
+  .bonus-card h3 {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+  .bonus-card p { font-size: 15px; color: var(--nevoa); line-height: 1.6; }
+
+  /* ── FOR WHO ── */
+  .forwho .h2 { margin-bottom: 56px; }
+  .forwho-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+  }
+  .forwho-col h3 { margin-bottom: 20px; }
+  .forwho-col.no h3::before { background: var(--pedra); }
+  .check-list { list-style: none; }
+  .check-list li {
+    display: flex;
+    gap: 16px;
+    align-items: baseline;
+    padding: 18px 0;
+    font-size: 16px;
+    border-top: 1px solid var(--areia);
+  }
+  .check-list.no li { color: var(--pedra); }
+  .check-list .x {
+    flex-shrink: 0;
+    width: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--pedra);
+  }
+
+  /* ── AUTHOR ── */
+  .author-inner {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 72px;
+    align-items: start;
+  }
+  .author-avatar {
+    aspect-ratio: 4 / 5;
+    background: var(--carvao);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .author-avatar svg { width: 62%; color: var(--marfim); }
+  .author-avatar::after {
+    content: '';
+    position: absolute;
+    right: 0; bottom: 0;
+    width: 28%; aspect-ratio: 1;
+    background: var(--laranja);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+  .author h2 {
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+  .author-role { color: var(--nevoa); margin-bottom: 36px; font-size: 11px; }
+  .author-role::before { display: none; }
+  .author-bio { font-size: 17px; }
+  .author-links {
+    margin-top: 32px;
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+  }
+  .author-links a { color: var(--laranja); text-decoration: none; }
+  .author-links span { color: var(--nevoa); }
+
+  /* ── WHAT'S INCLUDED ── */
+  .included-grid {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 64px;
+    align-items: start;
+  }
+  .included .h2 { margin-bottom: 20px; }
+  .included-sub { font-size: 17px; color: var(--pedra); }
+  .included-list { list-style: none; }
+  .included-list li {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    padding: 17px 0;
+    font-size: 16px;
+    border-bottom: 1px solid var(--areia);
+  }
+  .included-list li:first-child { border-top: 1px solid var(--areia); }
+
+  /* ── PRICING ── */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 460px;
+    gap: 64px;
+    align-items: center;
+  }
+  .price-card {
+    background: var(--carvao);
+    border-top: 4px solid var(--laranja);
+    padding: 48px 40px 40px;
+    position: relative;
+  }
+  .price-flag {
+    position: absolute;
+    top: -4px; right: 40px;
+    background: var(--laranja);
+    color: var(--grafite);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    padding: 7px 12px 6px;
+  }
+  .price-title {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 4px;
+  }
+  .price-desc { font-size: 14px; color: var(--nevoa); margin-bottom: 36px; }
+  .price-old {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 6px;
+  }
+  .price-old s {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--nevoa);
+    text-decoration-color: var(--laranja);
+    text-decoration-thickness: 2px;
+  }
+  .price-old .tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    background: var(--marfim);
+    color: var(--grafite);
+    padding: 4px 9px;
+  }
+  .price-value {
+    font-size: clamp(76px, 10vw, 112px);
+    font-weight: 800;
+    letter-spacing: -0.06em;
+    line-height: 0.9;
+    margin-bottom: 14px;
+  }
+  .price-value sup {
+    font-size: 0.26em;
+    letter-spacing: 0;
+    vertical-align: top;
+    position: relative;
+    top: 0.5em;
+    margin-right: 8px;
+    color: var(--laranja);
+    font-weight: 700;
+  }
+  .price-once { font-size: 13px; color: var(--nevoa); margin-bottom: 32px; }
+  .price-items { list-style: none; margin-bottom: 36px; }
+  .price-items li {
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
+    padding: 11px 0;
+    font-size: 15px;
+    border-top: 1px solid rgba(243,239,230,0.08);
+  }
+  .price-card .btn-cta { width: 100%; padding: 22px; }
+
+  /* ── FAQ ── */
+  .faq-grid {
+    display: grid;
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: 64px;
+    align-items: start;
+  }
+  .faq-list { border-top: 1px solid var(--areia); }
+  .faq-item { border-bottom: 1px solid var(--areia); }
+  .faq-q {
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    padding: 26px 0;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    cursor: pointer;
+  }
+  .faq-q::-webkit-details-marker { display: none; }
+  .faq-q::after {
+    content: '+';
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--telha);
+    border: 1px solid var(--areia);
+    transition: transform 0.25s, background 0.25s, color 0.25s;
+  }
+  .faq-item[open] .faq-q::after {
+    transform: rotate(45deg);
+    background: var(--laranja);
+    border-color: var(--laranja);
+    color: var(--grafite);
+  }
+  .faq-q:hover { color: var(--telha); }
+  .faq-a {
+    font-size: 16px;
+    color: var(--pedra);
+    line-height: 1.7;
+    padding: 0 56px 28px 0;
+  }
+
+  /* ── FINAL CTA ── */
+  .final-cta { padding: 144px 0; position: relative; overflow: hidden; }
+  .final-cta::before {
+    content: '';
+    position: absolute;
+    right: -8%;
+    bottom: -40%;
+    width: 52%;
+    aspect-ratio: 1;
+    background: var(--laranja);
+    opacity: 0.06;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    pointer-events: none;
+  }
+  .final-cta h2 {
+    font-size: clamp(40px, 7vw, 88px);
+    font-weight: 800;
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+    max-width: 14ch;
+    margin-bottom: 40px;
+  }
+  .final-cta .support { margin-bottom: 52px; }
+
+  /* ── FOOTER ── */
+  .footer {
+    padding: 48px 0 120px;
+    border-top: 1px solid rgba(243,239,230,0.1);
+  }
+  .footer-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    padding-bottom: 28px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid rgba(243,239,230,0.1);
+  }
+  .footer .logo { width: 170px; }
+  .footer-sign { font-size: 11px; font-weight: 500; letter-spacing: 0.3em; color: var(--nevoa); }
+  .footer-sign b { color: var(--laranja); font-weight: 500; margin: 0 0.4em; }
+  .footer p { font-size: 13px; color: var(--nevoa); }
+  .footer-bottom { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .footer a { color: var(--marfim); text-decoration: none; }
+  .footer a:hover { color: var(--laranja); }
+
+  /* ── STICKY CTA BAR ── */
+  .sticky-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(24,26,29,0.96);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--laranja);
+    z-index: 100;
+    transform: translateY(100%);
+    transition: transform 0.4s ease;
+  }
+  .sticky-bar.visible { transform: translateY(0); }
+  .sticky-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  .sticky-bar p { display: flex; align-items: center; gap: 14px; font-size: 14px; color: var(--nevoa); }
+  .sticky-bar p svg { width: 34px; color: var(--marfim); }
+  .sticky-bar strong { color: var(--marfim); }
+  .sticky-bar .btn-cta { padding: 13px 26px; font-size: 13px; }
+
+  /* ── REVEAL ── */
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    :root { --sec: 88px; }
+    .hero-grid { grid-template-columns: 1fr; min-height: auto; padding: 64px 0 80px; }
+    .phone { display: none; }
+    .problem-grid, .included-grid, .faq-grid, .pricing-grid, .forwho-inner { grid-template-columns: 1fr; gap: 40px; }
+    .chapters-grid { grid-template-columns: 1fr; }
+    .author-inner { grid-template-columns: 1fr; gap: 40px; }
+    .author-avatar { max-width: 240px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); row-gap: 40px; }
+    .stat-item:nth-child(3) { border-left: none; padding-left: 0; }
+  }
+  @media (max-width: 640px) {
+    :root { --pad: 16px; --sec: 72px; }
+    .logo { width: 160px; }
+    .header-tag { display: none; }
+    .sec-top { margin-bottom: 40px; }
+    .bonus-grid { grid-template-columns: 1fr; }
+    .chapter-item { grid-template-columns: 64px 1fr; }
+    .chapter-num { font-size: 36px; }
+    .stat-item { padding: 0 16px; }
+    .price-card { padding: 44px 24px 28px; }
+    .price-flag { right: 24px; }
+    .btn-cta { width: 100%; padding: 19px 24px; }
+    .quote { padding: 88px 0; }
+    .final-cta { padding: 96px 0; }
+    .sticky-bar p { display: none; }
+    .faq-a { padding-right: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .reveal { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- STICKY BAR -->
+<div class="sticky-bar" id="stickyBar">
+  <div class="container sticky-inner">
+    <p><svg class="mono" viewBox="0 0 249 150" role="img" aria-label="Magno Agner"><path fill="currentColor" d="M0.00 150.00 L0.00 0.00 L40.00 0.00 L74.50 51.75 L109.00 0.00 L149.00 0.00 L249.00 150.00 L209.00 150.00 L129.00 30.00 L74.50 111.75 L40.00 60.00 L40.00 150.00 Z"/><path fill="#D86A3C" d="M129.00 60.00 L189.00 150.00 L69.00 150.00 Z"/></svg><span><strong>A Fórmula da Atenção 2.0</strong> — Magno Agner</span></p>
+    <a href="https://pay.kiwify.com.br/X3sQTH7" class="btn-cta">Quero o Ebook</a>
+  </div>
+</div>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap" aria-hidden="true">
+  <div class="marquee-track">
+    <span class="marquee-item">100 Ganchos Prontos</span>
+    <span class="marquee-item">30 CTAs Que Convertem</span>
+    <span class="marquee-item">Calendário 30 Dias</span>
+    <span class="marquee-item">Prompts Para ChatGPT</span>
+    <span class="marquee-item">Stories Magnéticos</span>
+    <span class="marquee-item">Roteiros AIDA & PAS</span>
+    <span class="marquee-item">IA Para Conteúdo</span>
+    <span class="marquee-item">Storytelling</span>
+    <span class="marquee-item">100 Ganchos Prontos</span>
+    <span class="marquee-item">30 CTAs Que Convertem</span>
+    <span class="marquee-item">Calendário 30 Dias</span>
+    <span class="marquee-item">Prompts Para ChatGPT</span>
+    <span class="marquee-item">Stories Magnéticos</span>
+    <span class="marquee-item">Roteiros AIDA & PAS</span>
+    <span class="marquee-item">IA Para Conteúdo</span>
+    <span class="marquee-item">Storytelling</span>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero dark">
+  <div class="container">
+    <header class="site-header">
+      <svg class="logo" viewBox="78 78 1118 150" role="img" aria-label="Magno Agner — Vídeo e Estratégia"><g transform="translate(80.0,80.0)"><path fill="currentColor" d="M0.00 150.00 L0.00 0.00 L40.00 0.00 L74.50 51.75 L109.00 0.00 L149.00 0.00 L249.00 150.00 L209.00 150.00 L129.00 30.00 L74.50 111.75 L40.00 60.00 L40.00 150.00 Z"/><path fill="#D86A3C" d="M129.00 60.00 L189.00 150.00 L69.00 150.00 Z"/></g><path fill="currentColor" d="M378.6 163.15953927268833V85.15953927268833H407.39194630872487L417.33825503355706 115.52195538007089Q418.17583892617455 118.29645202436618 419.24899328859067 122.87698893711786Q420.32214765100673 127.45752584986954 421.4214765100671 132.6924251787286Q422.5208053691276 137.92732450758766 423.43691275167794 142.79578088342657Q424.35302013422825 147.66423725926552 424.9288590604027 151.17161980960108H421.4214765100672Q421.99731543624165 147.7165862525541 422.913422818792 142.84812987671518Q423.8295302013423 137.97967350087626 424.90268456375844 132.7185996753729Q425.97583892617456 127.45752584986954 427.0489932885906 122.90316343376216Q428.12214765100674 118.34880101765478 428.95973154362423 115.52195538007089L438.74899328859067 85.15953927268833H467.59328859060406V163.15953927268833H449.0093959731544V129.55148558141317Q449.0093959731544 126.93403591698363 449.1140939597316 122.82463994382928Q449.2187919463088 118.71524397067492 449.34966442953026 113.89913658812458Q449.48053691275175 109.08302920557423 449.6114093959732 104.18839833309102Q449.7422818791947 99.2937674606078 449.7422818791947 95.05349900423195H450.8416107382551Q449.89932885906046 99.71255940691651 448.6691275167786 104.68571376933262Q447.4389261744967 109.65886813174873 446.20872483221484 114.3702775277219Q444.97852348993297 119.08168692369505 443.85302013422825 123.00786142033934Q442.7275167785235 126.93403591698363 441.9422818791947 129.55148558141317L430.84429530201345 163.15953927268833H415.40134228187924L404.14630872483224 129.55148558141317Q403.3610738255034 126.98638491027222 402.2093959731544 123.06021041362793Q401.0577181208054 119.13403591698363 399.8013422818792 114.42262652101047Q398.54496644295307 109.71121712503732 397.2885906040269 104.73806276262121Q396.0322147651007 99.76490840020512 394.98523489932893 95.05349900423195H396.3463087248323Q396.39865771812083 99.18906947403062 396.50335570469804 104.05752584986953Q396.6080536912752 108.92598222570847 396.73892617449667 113.7944386015474Q396.86979865771815 118.66289497738632 397.00067114093963 122.77229095054068Q397.1315436241611 126.88168692369504 397.1315436241611 129.55148558141317V163.15953927268833Z M475.054067114094 163.15953927268833 501.0715167785235 85.15953927268833H525.8325906040269L552.6352751677853 163.15953927268833H531.9050738255035L521.0688322147652 129.08034464181586Q518.4513825503357 120.54745873577558 516.0171543624162 110.94141846731921Q513.5829261744967 101.33537819886283 511.1225234899329 91.02262652101048H515.2580939597316Q512.902389261745 101.38772719215142 510.70373154362426 110.99376746060778Q508.5050738255034 120.59980772906417 506.0446711409396 129.08034464181586L495.5748724832215 163.15953927268833ZM492.74802684563764 146.56490840020513V132.43068021228564H534.9936644295302V146.56490840020513Z M595.7457181208053 164.20651913846015Q584.6477315436241 164.20651913846015 576.219543624161 159.3642372592655Q567.7913557046979 154.5219553800709 563.0537718120805 145.57027752772188Q558.3161879194631 136.6185996753729 558.3161879194631 124.3165862525541Q558.3161879194631 111.543431890138 563.3155167785235 102.5655795411447Q568.3148456375839 93.58772719215142 576.7168590604026 88.85014329953397Q585.1188724832215 84.11255940691652 595.5363221476509 84.11255940691652Q602.2893422818792 84.11255940691652 608.0739060402684 86.04947215859437Q613.8584697986577 87.98638491027222 618.3866577181208 91.54611645389639Q622.9148456375839 95.10584799752054 625.7155167785235 99.94812987671517Q628.516187919463 104.79041175590982 629.2490738255034 110.60115001094337H610.5604832214765Q609.8799463087248 108.1930963196682 608.5973959731543 106.28235806463465Q607.3148456375839 104.37161980960109 605.4302818791946 103.03672048074202Q603.5457181208053 101.70182115188297 601.1638389261744 101.02128423913129Q598.7819597315436 100.34074732637961 595.8504161073826 100.34074732637961Q590.1967248322147 100.34074732637961 585.9826308724832 103.11524397067491Q581.7685369127516 105.88974061497021 579.491355704698 111.20316343376216Q577.2141744966443 116.5165862525541 577.2141744966443 124.05484128611116Q577.2141744966443 131.64544531295678 579.4390067114093 136.98504262839305Q581.6638389261744 142.32463994382928 585.8517583892617 145.15148558141317Q590.039677852349 147.97833121899706 595.9027651006711 147.97833121899706Q601.1900134228188 147.97833121899706 604.8282684563758 146.25081444047356Q608.4665234899329 144.52329766195007 610.3510872483221 141.30383457470174Q612.2356510067114 138.08437148745344 612.2356510067114 133.73940504450042L615.7430335570469 134.21054598409773H596.6356510067114V120.65215672235277H630.0866577181208V130.91255940691653Q630.0866577181208 141.33000907134604 625.6893422818791 148.7897406149702Q621.2920268456376 156.2494721585944 613.5182013422818 160.22799564852727Q605.7443758389262 164.20651913846015 595.7457181208053 164.20651913846015Z M639.693744966443 163.15953927268833V85.15953927268833H660.0051543624161L681.7823355704697 120.39041175590981Q683.8762953020134 123.89779430624537 685.8917315436241 127.64074732637961Q687.9071677852348 131.38370034651385 689.8964295302013 135.93806276262123Q691.8856912751678 140.4924251787286 693.9273020134228 146.40786142033934H692.1997852348993Q691.8856912751678 142.1152439706749 691.545422818792 136.88034464181584Q691.2051543624161 131.64544531295678 690.9434093959732 126.69846544718497Q690.6816644295302 121.75148558141316 690.6816644295302 118.34880101765478V85.15953927268833H709.632V163.15953927268833H689.2682416107382L669.3232751677853 130.86021041362793Q666.6534765100671 126.41054598409772 664.4809932885905 122.43202249416484Q662.3085100671141 118.45349900423196 660.1360268456376 113.7944386015474Q657.963543624161 109.13537819886284 655.032 102.85349900423196H657.1783087248322Q657.5447516778523 108.45484128611116 657.8850201342282 113.7682641049031Q658.225288590604 119.08168692369505 658.4346845637583 123.50517685658096Q658.6440805369127 127.92866678946686 658.6440805369127 130.86021041362793V163.15953927268833Z M756.0927785234899 164.20651913846015Q745.5706308724832 164.20651913846015 737.1686174496645 159.5474587357756Q728.7666040268456 154.888398333091 723.8457986577181 145.93672048074203Q718.9249932885906 136.98504262839305 718.9249932885906 124.21188826597692Q718.9249932885906 111.33403591698364 723.8457986577181 102.38235806463464Q728.7666040268456 93.43068021228565 737.1686174496645 88.77161980960108Q745.5706308724832 84.11255940691652 756.0927785234899 84.11255940691652Q766.562577181208 84.11255940691652 774.9645906040269 88.77161980960108Q783.3666040268456 93.43068021228565 788.2612348993289 102.38235806463464Q793.155865771812 111.33403591698364 793.155865771812 124.21188826597692Q793.155865771812 137.03739162168162 788.2612348993289 145.9890694740306Q783.3666040268456 154.9407473263796 774.9645906040269 159.57363323241987Q766.562577181208 164.20651913846015 756.0927785234899 164.20651913846015ZM756.0927785234899 147.97833121899706Q761.7464697986577 147.97833121899706 765.8296912751678 145.25618356799035Q769.9129127516778 142.53403591698364 772.1115704697986 137.22061309819168Q774.3102281879194 131.90719027939974 774.3102281879194 124.21188826597692Q774.3102281879194 116.46423725926552 772.1115704697986 111.12463994382927Q769.9129127516778 105.78504262839303 765.8296912751678 103.06289497738632Q761.7464697986577 100.34074732637961 756.0927785234899 100.34074732637961Q750.3867382550335 100.34074732637961 746.3035167785234 103.08906947403062Q742.2202953020134 105.83739162168162 740.0216375838926 111.15081444047357Q737.8229798657718 116.46423725926552 737.8229798657718 124.21188826597692Q737.8229798657718 131.90719027939974 740.0216375838926 137.1944386015474Q742.2202953020134 142.48168692369504 746.3035167785234 145.23000907134605Q750.3867382550335 147.97833121899706 756.0927785234899 147.97833121899706Z  M821.2693691275167 163.15953927268833 847.2868187919463 85.15953927268833H872.0478926174496L898.850577181208 163.15953927268833H878.1203758389261L867.2841342281879 129.08034464181586Q864.6666845637583 120.54745873577558 862.2324563758389 110.94141846731921Q859.7982281879194 101.33537819886283 857.3378255033557 91.02262652101048H861.4733959731543Q859.1176912751678 101.38772719215142 856.919033557047 110.99376746060778Q854.7203758389261 120.59980772906417 852.2599731543623 129.08034464181586L841.7901744966442 163.15953927268833ZM838.9633288590603 146.56490840020513V132.43068021228564H881.2089664429529V146.56490840020513Z M941.9610201342281 164.20651913846015Q930.8630335570468 164.20651913846015 922.4348456375837 159.3642372592655Q914.0066577181207 154.5219553800709 909.2690738255033 145.57027752772188Q904.5314899328858 136.6185996753729 904.5314899328858 124.3165862525541Q904.5314899328858 111.543431890138 909.5308187919462 102.5655795411447Q914.5301476510066 93.58772719215142 922.9321610738255 88.85014329953397Q931.3341744966442 84.11255940691652 941.7516241610738 84.11255940691652Q948.5046442953019 84.11255940691652 954.2892080536911 86.04947215859437Q960.0737718120804 87.98638491027222 964.6019597315435 91.54611645389639Q969.1301476510066 95.10584799752054 971.9308187919462 99.94812987671517Q974.7314899328858 104.79041175590982 975.4643758389261 110.60115001094337H956.7757852348992Q956.0952483221475 108.1930963196682 954.8126979865771 106.28235806463465Q953.5301476510066 104.37161980960109 951.6455838926173 103.03672048074202Q949.761020134228 101.70182115188297 947.3791409395972 101.02128423913129Q944.9972617449663 100.34074732637961 942.0657181208053 100.34074732637961Q936.4120268456375 100.34074732637961 932.1979328859059 103.11524397067491Q927.9838389261744 105.88974061497021 925.7066577181207 111.20316343376216Q923.429476510067 116.5165862525541 923.429476510067 124.05484128611116Q923.429476510067 131.64544531295678 925.6543087248322 136.98504262839305Q927.8791409395972 142.32463994382928 932.0670604026844 145.15148558141317Q936.2549798657717 147.97833121899706 942.1180671140938 147.97833121899706Q947.4053154362415 147.97833121899706 951.0435704697986 146.25081444047356Q954.6818255033556 144.52329766195007 956.5663892617449 141.30383457470174Q958.4509530201341 138.08437148745344 958.4509530201341 133.73940504450042L961.9583355704697 134.21054598409773H942.8509530201342V120.65215672235277H976.3019597315435V130.91255940691653Q976.3019597315435 141.33000907134604 971.904644295302 148.7897406149702Q967.5073288590603 156.2494721585944 959.7335033557047 160.22799564852727Q951.9596778523489 164.20651913846015 941.9610201342281 164.20651913846015Z M985.9090469798657 163.15953927268833V85.15953927268833H1006.2204563758388L1027.9976375838926 120.39041175590981Q1030.091597315436 123.89779430624537 1032.1070335570469 127.64074732637961Q1034.1224697986577 131.38370034651385 1036.111731543624 135.93806276262123Q1038.1009932885904 140.4924251787286 1040.1426040268454 146.40786142033934H1038.4150872483222Q1038.1009932885904 142.1152439706749 1037.7607248322147 136.88034464181584Q1037.4204563758387 131.64544531295678 1037.158711409396 126.69846544718497Q1036.8969664429528 121.75148558141316 1036.8969664429528 118.34880101765478V85.15953927268833H1055.8473020134227V163.15953927268833H1035.483543624161L1015.538577181208 130.86021041362793Q1012.8687785234898 126.41054598409772 1010.6962953020134 122.43202249416484Q1008.5238120805368 118.45349900423196 1006.3513288590602 113.7944386015474Q1004.1788456375838 109.13537819886284 1001.2473020134228 102.85349900423196H1003.3936107382549Q1003.7600536912751 108.45484128611116 1004.1003221476509 113.7682641049031Q1004.4405906040267 119.08168692369505 1004.6499865771812 123.50517685658096Q1004.8593825503355 127.92866678946686 1004.8593825503355 130.86021041362793V163.15953927268833Z M1066.9201610738253 163.15953927268833V85.15953927268833H1121.0490201342282V100.23604933980243H1085.3993557046979V116.35953927268832H1118.2221744966441V131.1219553800709H1085.3993557046979V148.08302920557423H1120.9966711409395V163.15953927268833Z M1131.2319463087247 163.15953927268833V85.15953927268833H1163.164832214765Q1171.9594630872482 85.15953927268833 1178.3460402684564 88.32665336664806Q1184.7326174496643 91.4937674606078 1188.1614765100671 97.30450571564135Q1191.5903355704697 103.11524397067491 1191.5903355704697 111.07229095054069Q1191.5903355704697 119.08168692369505 1188.082953020134 124.76155269550713Q1184.5755704697985 130.4414184673192 1178.0842953020133 133.3729620914803Q1171.593020134228 136.30450571564137 1162.6413422818791 136.30450571564137H1142.2775838926173V121.69913658812457H1159.2910067114094Q1163.6359731543623 121.69913658812457 1166.5413422818792 120.54745873577559Q1169.446711409396 119.3957808834266 1170.9386577181208 117.04007618544001Q1172.4306040268455 114.68437148745343 1172.4306040268455 111.07229095054069Q1172.4306040268455 107.40786142033934 1170.9386577181208 104.99980772906417Q1169.446711409396 102.591754037789 1166.5151677852348 101.36155269550713Q1163.5836241610737 100.13135135322524 1159.2386577181207 100.13135135322524H1149.7111409395973V163.15953927268833ZM1174.053422818792 163.15953927268833 1155.0507382550334 127.50987484315813H1174.8386577181207L1194.3124832214764 163.15953927268833Z"/><path fill="currentColor" d="M392.4479306470081 224.84046072731167 378.6 186.55953927268834H384.92020582405195L392.37085496622694 207.85811906187138Q393.1929955612256 210.32454084686725 394.2592091453644 213.8957140563925Q395.32542272950326 217.46688726591776 396.6870930899697 222.3226551551284H395.4795740910655Q396.81555255793825 217.36411969154295 397.8560742484834 213.8443302692051Q398.89659593902854 210.32454084686725 399.6930446404334 207.85811906187138L406.9381586338588 186.55953927268834H413.28405635150443L399.6159689596523 224.84046072731167Z M440.4763565310838 186.55953927268834V224.84046072731167H434.6186047917186V186.55953927268834ZM435.2609021315613 182.83421470160084 438.85776723468024 175.15233851708246H444.6898270804517L439.5771402553041 182.83421470160084Z M477.1746573403348 224.84046072731167H467.7200404978507V219.70208200857027H476.86635461721033Q481.2082846345468 219.70208200857027 484.085776717042 218.08349271216673Q486.96326879953716 216.46490341576322 488.4020148407848 213.3176464505341Q489.8407608820323 210.170389485305 489.8407608820323 205.64861621281258Q489.8407608820323 201.15253483391388 488.4148607875816 198.04381570907532Q486.9889606931309 194.9350965842368 484.17569834461995 193.31650728783325Q481.36243599610907 191.69791799142973 477.1746573403348 191.69791799142973H467.514505349101V186.55953927268834H477.5600357442404Q483.2122523348559 186.55953927268834 487.24587962906793 188.84611780252825Q491.27950692327994 191.13269633236817 493.43762598515127 195.41039661572037Q495.59574504702266 199.68809689907258 495.59574504702266 205.64861621281258Q495.59574504702266 211.6348274201463 493.42478003835447 215.92537365029534Q491.2538150296862 220.2159198804444 487.13026610789626 222.52819030387803Q483.0067171861063 224.84046072731167 477.1746573403348 224.84046072731167ZM470.59753258034584 186.55953927268834V224.84046072731167H464.73978084098064V186.55953927268834Z M518.497498996453 224.84046072731167V186.55953927268834H542.5964951873501V191.5951504170549H524.3552507358182V203.00235117266078H541.2862086140711V208.01227042343362H524.3552507358182V219.8048495829451H542.7506465489124V224.84046072731167Z M581.9667529303466 225.3542985991858Q577.0082174667612 225.3542985991858 573.0902036937209 223.00349033536162Q569.1721899206806 220.65268207153744 566.9241492312312 216.24652232021668Q564.6761085417819 211.84036256889596 564.6761085417819 205.7256918935937Q564.6761085417819 199.58532932469774 566.9241492312312 195.179169573377Q569.1721899206806 190.77300982205628 573.0902036937209 188.40935561143525Q577.0082174667612 186.0457014008142 581.9667529303466 186.0457014008142Q586.9252883939321 186.0457014008142 590.8176102733787 188.40935561143525Q594.7099321528252 190.77300982205628 596.9579728422746 195.179169573377Q599.206013531724 199.58532932469774 599.206013531724 205.7256918935937Q599.206013531724 211.84036256889596 596.9579728422746 216.24652232021668Q594.7099321528252 220.65268207153744 590.8176102733787 223.00349033536162Q586.9252883939321 225.3542985991858 581.9667529303466 225.3542985991858ZM581.9667529303466 220.01038473169476Q585.2296234167474 220.01038473169476 587.8116587229149 218.37894948849436Q590.3936940290824 216.74751424529398 591.8966698043143 213.54887349287748Q593.3996455795462 210.35023274046097 593.3996455795462 205.7256918935937Q593.3996455795462 201.04976725953904 591.8966698043143 197.85112650712253Q590.3936940290824 194.65248575470602 587.8116587229149 193.02105051150562Q585.2296234167474 191.38961526830525 581.9667529303466 191.38961526830525Q578.6781905503522 191.38961526830525 576.0833092973878 193.03389645830248Q573.4884280444234 194.6781776482997 571.9854522691915 197.87681840071622Q570.4824764939597 201.07545915313275 570.4824764939597 205.7256918935937Q570.4824764939597 210.35023274046097 571.9854522691915 213.53602754608062Q573.4884280444234 216.72182235170027 576.0833092973878 218.3661035416975Q578.6781905503522 220.01038473169476 581.9667529303466 220.01038473169476Z  M651.9463327008855 224.84046072731167V186.55953927268834H676.0453288917826V191.5951504170549H657.8040844402507V203.00235117266078H674.7350423185036V208.01227042343362H657.8040844402507V219.8048495829451H676.1994802533449V224.84046072731167Z  M729.2737940392245 224.84046072731167V186.55953927268834H753.3727902301216V191.5951504170549H735.1315457785897V203.00235117266078H752.0625036568426V208.01227042343362H735.1315457785897V219.8048495829451H753.5269415916839V224.84046072731167Z M789.6343288482796 225.48275806715435Q785.3437826181305 225.48275806715435 782.1836797061046 224.1210877066879Q779.0235767940786 222.7594173462214 777.237990189316 220.22876582724126Q775.4524035845534 217.69811430826113 775.2725603293974 214.204016779517H781.1560039623563Q781.3358472175122 216.28506016060726 782.5048283760259 217.64673052107372Q783.6738095345396 219.00840088154018 785.5493177668802 219.67639011497658Q787.4248259992207 220.34437934841296 789.6086369546858 220.34437934841296Q792.049366846088 220.34437934841296 793.9377210252255 219.5864684873986Q795.826075204363 218.82855762638425 796.9308266288924 217.42834942552722Q798.0355780534218 216.02814122467018 798.0355780534218 214.17832488592327Q798.0355780534218 212.50835180233233 797.0721320436578 211.4421382181935Q796.1086860338937 210.37592463405466 794.4772507906933 209.6693975602277Q792.845815547493 208.9628704864008 790.7647721664026 208.42334072093294L786.2943826810977 207.190129828435Q781.5927661534492 205.93122704234335 778.9593470600944 203.4648052573475Q776.3259279667394 200.99838347235163 776.3259279667394 197.06752375251446Q776.3259279667394 193.75326947892628 778.1115145715021 191.27400174713358Q779.8971011762646 188.79473401534085 782.9672824607126 187.42021770807753Q786.0374637451606 186.0457014008142 789.8912477842166 186.0457014008142Q793.8221075040537 186.0457014008142 796.8152131077206 187.42021770807753Q799.8083187113875 188.79473401534085 801.516829635369 191.18408011955557Q803.2253405593506 193.57342622377033 803.3024162401316 196.63076156142145H797.5988158623287Q797.3162050327979 194.01018841486334 795.1709319177235 192.57144237361575Q793.0256588026489 191.13269633236817 789.7627883162481 191.13269633236817Q787.4505178928144 191.13269633236817 785.7420069688329 191.85206935299198Q784.0334960448514 192.57144237361575 783.0957419286812 193.84319110650426Q782.1579878125109 195.11493983939275 782.1579878125109 196.7335291357963Q782.1579878125109 198.55765358094948 783.2755851838372 199.67525095227572Q784.3931825551633 200.79284832360196 785.99892590477 201.4479916102415Q787.6046692543767 202.10313489688102 789.069107189218 202.48851330078662L792.7944317603055 203.4648052573475Q794.6185562054587 203.92725934203423 796.5582941717836 204.7108620966423Q798.4980321381084 205.49446485125034 800.1423133281057 206.7405216905451Q801.7865945181029 207.9865785298399 802.8014243150544 209.82354892178995Q803.8162541120058 211.66051931374 803.8162541120058 214.2554005667044Q803.8162541120058 217.49257915951148 802.1462810284149 220.03607662528847Q800.4763079448239 222.57957409106547 797.3033590860011 224.0311660791099Q794.1304102271782 225.48275806715435 789.6343288482796 225.48275806715435Z M824.6369646803458 191.5951504170549V186.55953927268834H854.3624855682648V191.5951504170549H842.4671388343785V224.84046072731167H836.5836952014196V191.5951504170549Z M876.6990178586336 224.84046072731167V186.55953927268834H890.4184890376731Q894.8374947357908 186.55953927268834 897.792062499067 188.0882069415139Q900.7466302623434 189.61687461033947 902.2110681971847 192.34021533127242Q903.6755061320259 195.06355605220534 903.6755061320259 198.5833454745432Q903.6755061320259 202.12882679047473 902.1982222503877 204.7879377774234Q900.7209383687497 207.44704876437208 897.7663706054734 208.91148669921336Q894.811802842197 210.37592463405466 890.3671052504857 210.37592463405466H880.0646559194092V205.36600538328182H889.8018835914241Q892.6279918867319 205.36600538328182 894.3621947043072 204.55671073508006Q896.0963975218824 203.74741608687827 896.918538116881 202.23159436484957Q897.7406787118796 200.71577264282087 897.7406787118796 198.5833454745432Q897.7406787118796 196.4252264126718 896.918538116881 194.85802090345567Q896.0963975218824 193.29081539423956 894.3493487575104 192.43013695885037Q892.6022999931382 191.56945852346118 889.7504998042367 191.56945852346118H882.5567695979988V224.84046072731167ZM898.4600517325034 224.84046072731167 889.1852781451752 207.5498163387469H895.6853272243831L905.1142521732735 224.84046072731167Z M923.6483842117738 224.84046072731167 937.2650878164384 186.55953927268834H944.4588180226764L958.332440563278 224.84046072731167H951.9865428456325L944.5358937034574 203.54188093812863Q943.6623693212714 200.9469996851642 942.6218476307263 197.42721026282635Q941.5813259401812 193.90742084048853 940.2196555797148 188.97457727049678H941.4014826850253Q940.0911961117462 193.95880462767593 939.050674421201 197.51713189040436Q938.0101527306559 201.07545915313275 937.213704029251 203.54188093812863L929.9942819294193 224.84046072731167ZM931.0219576731677 214.74354654498484V209.86208676218052H950.9331752082905V214.74354654498484Z M977.7400969839642 191.5951504170549V186.55953927268834H1007.4656178718832V191.5951504170549H995.5702711379969V224.84046072731167H989.686827505038V191.5951504170549Z M1029.802150162252 224.84046072731167V186.55953927268834H1053.901146353149V191.5951504170549H1035.659901901617V203.00235117266078H1052.59085977987V208.01227042343362H1035.659901901617V219.8048495829451H1054.0552977147113V224.84046072731167ZM1039.6678373022353 182.83421470160084 1043.2647024053542 175.15233851708246H1049.0967622511257L1043.984075425978 182.83421470160084Z M1093.399863564114 225.3542985991858Q1088.2101010581853 225.3542985991858 1084.292087285145 222.96495249497104Q1080.3740735121046 220.57560639075632 1078.1774166098426 216.1694466394356Q1075.9807597075808 211.76328688811483 1075.9807597075808 205.7256918935937Q1075.9807597075808 199.61102121829146 1078.2031085034364 195.20486146697073Q1080.425457299292 190.79870171564997 1084.3049332319417 188.42220155823208Q1088.1844091645914 186.0457014008142 1093.142944628177 186.0457014008142Q1096.2259718594219 186.0457014008142 1098.9107747399642 186.9577636233908Q1101.5955776205064 187.8698258459674 1103.7151588419874 189.5526448763552Q1105.8347400634682 191.235463906743 1107.2092563707315 193.5605802769735Q1108.5837726779948 195.88569664720396 1109.0462267626815 198.6604211553243H1103.0343236617541Q1102.52048578988 196.99044807173334 1101.6212695141003 195.64162365806374Q1100.7220532383205 194.29279924439413 1099.4759963990257 193.34219918142696Q1098.2299395597308 192.3915991184598 1096.6498881037178 191.89060719338252Q1095.069836647705 191.38961526830525 1093.1943284153645 191.38961526830525Q1089.9571498225573 191.38961526830525 1087.3751145163897 193.03389645830248Q1084.7930792102222 194.6781776482997 1083.2901034349902 197.87681840071622Q1081.7871276597584 201.07545915313275 1081.7871276597584 205.7Q1081.7871276597584 210.32454084686725 1083.2901034349902 213.5103356524869Q1084.7930792102222 216.69613045810655 1087.4136523567804 218.35325759490064Q1090.0342255033383 220.01038473169476 1093.4255554577078 220.01038473169476Q1096.5085826889526 220.01038473169476 1098.8080071655895 218.7643278924Q1101.1074316422262 217.5182710531052 1102.3791803751146 215.21884657646842Q1103.650929108003 212.91942209983165 1103.650929108003 209.7850110813994L1105.1667508300318 210.04193001733648H1094.2733879463V205.21185402171957H1109.3802213793997V209.60516782624345Q1109.3802213793997 214.43524382186035 1107.3120239451064 217.96787919099506Q1105.2438265108128 221.50051456012977 1101.6469614076939 223.42740657965777Q1098.050096304575 225.3542985991858 1093.399863564114 225.3542985991858Z M1138.2938784297576 186.55953927268834V224.84046072731167H1132.4361266903925V186.55953927268834Z M1159.6284268699717 224.84046072731167 1173.2451304746364 186.55953927268834H1180.4388606808743L1194.3124832214762 224.84046072731167H1187.9665855038306L1180.5159363616556 203.54188093812863Q1179.6424119794694 200.9469996851642 1178.6018902889243 197.42721026282635Q1177.5613685983792 193.90742084048853 1176.1996982379128 188.97457727049678H1177.3815253432233Q1176.071238769944 193.95880462767593 1175.030717079399 197.51713189040436Q1173.9901953888539 201.07545915313275 1173.193746687449 203.54188093812863L1165.9743245876173 224.84046072731167ZM1167.0020003313657 214.74354654498484V209.86208676218052H1186.9132178664886V214.74354654498484Z"/></svg>
+      <span class="label header-tag">Vídeo &amp; Estratégia</span>
+    </header>
+
+    <div class="hero-grid">
+      <div>
+        <div class="fade-up">
+          <div class="hero-badge">Edição 2.0</div>
+        </div>
+        <h1 class="fade-up delay-1">
+          A Fórmula<br>da <span class="accent">Atenção</span>
+        </h1>
+        <p class="hero-sub support fade-up delay-2">
+          Como criar vídeos, stories e conteúdos que <strong>prendem a audiência</strong> e geram clientes todos os dias.
+        </p>
+        <div class="fade-up delay-3">
+          <a href="https://pay.kiwify.com.br/X3sQTH7" class="btn-cta">Quero acesso agora</a>
+          <span class="btn-sub">Acesso imediato após o pagamento</span>
+        </div>
+      </div>
+
+      <div class="phone fade-up delay-4" aria-hidden="true">
+        <div class="phone-screen">
+          <div class="phone-top">
+            <span class="rec">REC</span>
+            <span id="timecode">00:00:00</span>
+          </div>
+          <div class="phone-frame"><span></span><span></span><span></span><span></span></div>
+          <div class="phone-mono"><svg class="mono" viewBox="0 0 249 150" role="img" aria-label="Magno Agner"><path fill="currentColor" d="M0.00 150.00 L0.00 0.00 L40.00 0.00 L74.50 51.75 L109.00 0.00 L149.00 0.00 L249.00 150.00 L209.00 150.00 L129.00 30.00 L74.50 111.75 L40.00 60.00 L40.00 150.00 Z"/><path fill="#D86A3C" d="M129.00 60.00 L189.00 150.00 L69.00 150.00 Z"/></svg></div>
+          <div class="phone-bottom">
+            <div class="phone-caption">Os 3 Segundos que<br>Decidem Tudo</div>
+            <div class="phone-bar"><i></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="problem light sec">
+  <div class="container">
+    <div class="sec-top">
+      <span class="label">O problema</span>
+      <span class="sec-num">01 / 06</span>
+    </div>
+    <div class="problem-grid">
+      <div>
+        <h2 class="h2">
+          Você posta. Posta de novo. E o resultado é <span class="mark">sempre o mesmo.</span>
+        </h2>
+        <p class="support">
+          Poucos likes, zero comentários, e zero clientes.<br>
+          Não é culpa do algoritmo. Não é culpa do nicho. Não é culpa da câmera.
+        </p>
+      </div>
+      <ul class="problem-list">
+        <li class="reveal"><span class="tri"></span>Você não sabe como capturar atenção nos primeiros 3 segundos</li>
+        <li class="reveal"><span class="tri"></span>Seus vídeos não têm estrutura — são só informação solta</li>
+        <li class="reveal"><span class="tri"></span>Você não usa ganchos que param o scroll</li>
+        <li class="reveal"><span class="tri"></span>Seus CTAs são genéricos e não convertem</li>
+        <li class="reveal"><span class="tri"></span>Você não tem um calendário de conteúdo consistente</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- FRASE DE DESTAQUE -->
+<section class="quote">
+  <div class="container">
+    <blockquote class="reveal">"A moeda mais valiosa do mundo digital não é dinheiro. É atenção."</blockquote>
+    <cite class="label">— Magno Agner · A Fórmula da Atenção 2.0</cite>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats dark">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item reveal">
+        <div class="stat-num">95<span>%</span></div>
+        <div class="stat-label">param de assistir<br>nos primeiros 3s</div>
+      </div>
+      <div class="stat-item reveal">
+        <div class="stat-num">8<span>s</span></div>
+        <div class="stat-label">tempo médio de<br>atenção humana</div>
+      </div>
+      <div class="stat-item reveal">
+        <div class="stat-num">5<span>bi</span></div>
+        <div class="stat-label">vídeos assistidos<br>por dia no Facebook</div>
+      </div>
+      <div class="stat-item reveal">
+        <div class="stat-num">500<span>h</span></div>
+        <div class="stat-label">enviadas ao YouTube<br>a cada minuto</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT YOU LEARN -->
+<section class="learn light sec">
+  <div class="container">
+    <div class="sec-top">
+      <span class="label">O conteúdo</span>
+      <span class="sec-num">02 / 06</span>
+    </div>
+    <h2 class="h2">8 capítulos que vão mudar como você <span class="mark">cria conteúdo</span></h2>
+    <div class="chapters-grid">
+      <div class="chapter-item reveal">
+        <div class="chapter-num">01</div>
+        <div class="chapter-content">
+          <h3>A Guerra pela Atenção</h3>
+          <p>A economia da atenção, por que ela importa e o que acontece no cérebro do seu público nos primeiros segundos.</p>
+        </div>
+      </div>
+      <div class="chapter-item reveal">
+        <div class="chapter-num">02</div>
+        <div class="chapter-content">
+          <h3>Os 3 Segundos que Decidem Tudo</h3>
+          <p>As 5 formas de abrir qualquer vídeo que garantem que ninguém vai passar para o próximo conteúdo.</p>
+        </div>
+      </div>
+      <div class="chapter-item reveal">
+        <div class="chapter-num">03</div>
+        <div class="chapter-content">
+          <h3>A Psicologia da Atenção</h3>
+          <p>Os 4 gatilhos psicológicos que fazem o cérebro parar automaticamente — e como combiná-los.</p>
+        </div>
+      </div>
+      <div class="chapter-item reveal">
+        <div class="chapter-num">04</div>
+        <div class="chapter-content">
+          <h3>Stories Magnéticos</h3>
+          <p>O método dos 5 stories: Gancho → Problema → Bastidor → Solução → CTA. Com exemplos reais e prontos.</p>
+        </div>
+      </div>
+      <div class="chapter-item reveal">
+        <div class="chapter-num">05</div>
+        <div class="chapter-content">
+          <h3>O Método dos Ganchos</h3>
+          <p>A anatomia de um gancho perfeito e a fórmula: Gatilho + Especificidade + Promessa.</p>
+        </div>
+      </div>
+      <div class="chapter-item reveal">
+        <div class="chapter-num">06</div>
+        <div class="chapter-content">
+          <h3>Roteiros que Vendem</h3>
+          <p>AIDA, PAS e Storytelling — as 3 estruturas mais poderosas, com exemplos para clínicas, lojas e cafeterias.</p>
+        </div>
+      </div>
+      <div class="chapter-item reveal">
+        <div class="chapter-num">07</div>
+        <div class="chapter-content">
+          <h3>O Empresário na Frente das Câmeras</h3>
+          <p>Como aparecer em vídeo com naturalidade, sem decorar roteiro — as 4 regras de ouro + checklist completo.</p>
+        </div>
+      </div>
+      <div class="chapter-item reveal">
+        <div class="chapter-num">08</div>
+        <div class="chapter-content">
+          <h3>IA Para Criar Conteúdo</h3>
+          <p>Como usar o ChatGPT para criar roteiros, legendas e calendários em minutos. Com a anatomia do prompt perfeito.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BONUS -->
+<section class="bonus dark sec">
+  <div class="container">
+    <div class="sec-top">
+      <span class="label">Bônus exclusivos</span>
+      <span class="sec-num">03 / 06</span>
+    </div>
+    <h2 class="h2">4 bônus que valem mais que o <span class="accent">ebook</span></h2>
+    <div class="bonus-grid">
+      <div class="bonus-card reveal">
+        <div class="bonus-head">
+          <svg class="bonus-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="15" cy="3.5" r="1.5"/><path d="M15 5v9.5a5 5 0 0 1-10 0V12"/><path d="M5 12l-2.5 2.5"/></svg>
+          <span class="label bonus-tag">Bônus 01</span>
+        </div>
+        <h3>100 Ganchos Prontos Para Usar</h3>
+        <p>10 categorias: Curiosidade, Erro, Autoridade, Transformação, Urgência, Prova Social, Polêmica, Resultado, Bastidor e Vendas.</p>
+      </div>
+      <div class="bonus-card reveal">
+        <div class="bonus-head">
+          <svg class="bonus-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10v4h3l10 5V5L6 10H3z"/><path d="M6.5 14.5 8 20h3l-1.2-4"/><path d="M19.5 9.5a3.5 3.5 0 0 1 0 5"/></svg>
+          <span class="label bonus-tag">Bônus 02</span>
+        </div>
+        <h3>Biblioteca de CTAs que Convertem</h3>
+        <p>50 chamadas para ação divididas por objetivo: comentários, direct, vendas, engajamento e educação. Copie e use.</p>
+      </div>
+      <div class="bonus-card reveal">
+        <div class="bonus-head">
+          <svg class="bonus-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3l1.9 5.1L17 10l-5.1 1.9L10 17l-1.9-5.1L3 10l5.1-1.9z"/><path d="M18 14l.9 2.1L21 17l-2.1.9L18 20l-.9-2.1L15 17l2.1-.9z"/></svg>
+          <span class="label bonus-tag">Bônus 03</span>
+        </div>
+        <h3>Prompts Prontos Para ChatGPT</h3>
+        <p>6 templates prontos para roteiro AIDA, PAS, Storytelling, legendas, títulos e calendário. Só substituir e gerar.</p>
+      </div>
+      <div class="bonus-card reveal">
+        <div class="bonus-head">
+          <svg class="bonus-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M7.5 14h2M11 14h2M14.5 14h2M7.5 17.5h2M11 17.5h2"/></svg>
+          <span class="label bonus-tag">Bônus 04</span>
+        </div>
+        <h3>Calendário de Conteúdo 30 Dias</h3>
+        <p>30 dias planejados com tipo, tema, gancho sugerido e melhor horário. Nunca mais fique sem saber o que postar.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOR WHO -->
+<section class="forwho light sec">
+  <div class="container">
+    <h2 class="h2">Este ebook é <span class="mark">para você?</span></h2>
+    <div class="forwho-inner">
+      <div class="forwho-col yes">
+        <h3 class="label">É para você se</h3>
+        <ul class="check-list yes">
+          <li class="reveal"><span class="tri"></span> Você tem um negócio e quer aparecer nas redes</li>
+          <li class="reveal"><span class="tri"></span> Você posta mas seus vídeos não geram clientes</li>
+          <li class="reveal"><span class="tri"></span> Você quer criar conteúdo mais rápido e com resultado</li>
+          <li class="reveal"><span class="tri"></span> Você quer parar de depender de agência</li>
+          <li class="reveal"><span class="tri"></span> Você quer aprender a usar IA para criar conteúdo</li>
+        </ul>
+      </div>
+      <div class="forwho-col no">
+        <h3 class="label">Não é para você se</h3>
+        <ul class="check-list no">
+          <li class="reveal"><span class="x">✕</span> Você quer resultado sem aplicar nada</li>
+          <li class="reveal"><span class="x">✕</span> Você não tem negócio nem quer aparecer</li>
+          <li class="reveal"><span class="x">✕</span> Você busca fórmulas mágicas instantâneas</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AUTHOR -->
+<section class="author dark sec">
+  <div class="container">
+    <div class="sec-top">
+      <span class="label">O autor</span>
+      <span class="sec-num">04 / 06</span>
+    </div>
+    <div class="author-inner">
+      <div class="author-avatar reveal" aria-hidden="true"><svg class="mono" viewBox="0 0 249 150" role="img" aria-label="Magno Agner"><path fill="currentColor" d="M0.00 150.00 L0.00 0.00 L40.00 0.00 L74.50 51.75 L109.00 0.00 L149.00 0.00 L249.00 150.00 L209.00 150.00 L129.00 30.00 L74.50 111.75 L40.00 60.00 L40.00 150.00 Z"/><path fill="#D86A3C" d="M129.00 60.00 L189.00 150.00 L69.00 150.00 Z"/></svg></div>
+      <div>
+        <h2>Magno Agner</h2>
+        <div class="label author-role">Videomaker · Estrategista de Conteúdo · BH, MG</div>
+        <p class="author-bio support">
+          Especialista em criação de conteúdo para redes sociais com <strong>mais de 500 vídeos produzidos</strong> para empresas de todos os segmentos — de clínicas a concessionárias, de cafeterias a marcas pessoais. <br><br>
+          Depois de trabalhar com mais de <strong>100 empresas em Belo Horizonte</strong>, compilou neste ebook tudo que aprendeu sobre como transformar atenção em vendas usando apenas um smartphone.
+        </p>
+        <div class="author-links">
+          <a href="https://instagram.com/magnoagner">@magnoagner</a>
+          <span>(31) 97509-8953</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT'S INCLUDED -->
+<section class="included light sec">
+  <div class="container">
+    <div class="sec-top">
+      <span class="label">O que está incluso</span>
+      <span class="sec-num">05 / 06</span>
+    </div>
+    <div class="included-grid">
+      <div>
+        <h2 class="h2">Tudo que você <span class="mark">recebe</span></h2>
+        <p class="included-sub">Acesso imediato após o pagamento</p>
+      </div>
+      <ul class="included-list">
+        <li class="reveal"><span class="tri"></span>E-book completo em PDF — 31 páginas</li>
+        <li class="reveal"><span class="tri"></span>8 capítulos com técnicas aplicáveis imediatamente</li>
+        <li class="reveal"><span class="tri"></span>Bônus 01 — Biblioteca de 100 Ganchos Prontos</li>
+        <li class="reveal"><span class="tri"></span>Bônus 02 — Biblioteca de CTAs que Convertem</li>
+        <li class="reveal"><span class="tri"></span>Bônus 03 — 6 Prompts Prontos Para ChatGPT</li>
+        <li class="reveal"><span class="tri"></span>Bônus 04 — Calendário de Conteúdo 30 Dias</li>
+        <li class="reveal"><span class="tri"></span>Acesso vitalício — leia quando quiser</li>
+        <li class="reveal"><span class="tri"></span>Atualizações incluídas sem custo adicional</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing dark sec" id="pricing">
+  <div class="container">
+    <div class="sec-top">
+      <span class="label">Investimento</span>
+      <span class="sec-num">06 / 06</span>
+    </div>
+    <div class="pricing-grid">
+      <h2 class="h2">Um preço justo por um resultado <span class="accent">real</span></h2>
+      <div class="price-card reveal">
+        <span class="price-flag">ACESSO IMEDIATO</span>
+        <div class="price-title">A Fórmula da Atenção 2.0</div>
+        <div class="price-desc">E-book completo + 4 bônus exclusivos</div>
+        <div class="price-old">
+          <s>R$ 97</s>
+          <span class="tag">Lançamento</span>
+        </div>
+        <div class="price-value"><sup>R$</sup>17</div>
+        <div class="price-once">Oferta por tempo limitado · Pagamento único · Acesso vitalício</div>
+        <ul class="price-items">
+          <li><span class="tri"></span>E-book completo em PDF (31 páginas)</li>
+          <li><span class="tri"></span>8 capítulos com técnicas práticas</li>
+          <li><span class="tri"></span>100 Ganchos prontos para usar</li>
+          <li><span class="tri"></span>Biblioteca de 50 CTAs</li>
+          <li><span class="tri"></span>6 Prompts para ChatGPT</li>
+          <li><span class="tri"></span>Calendário de conteúdo 30 dias</li>
+          <li><span class="tri"></span>Acesso vitalício + atualizações</li>
+        </ul>
+        <a href="https://pay.kiwify.com.br/X3sQTH7" class="btn-cta">Comprar agora — R$ 17</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq light sec">
+  <div class="container">
+    <div class="faq-grid">
+      <h2 class="h2">Perguntas <span class="mark">frequentes</span></h2>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary class="faq-q">Como vou receber o ebook?</summary>
+          <div class="faq-a">Imediatamente após a confirmação do pagamento, você recebe um e-mail com o link de acesso ao PDF. Não precisa esperar nada.</div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-q">Funciona para qualquer tipo de negócio?</summary>
+          <div class="faq-a">Sim. As técnicas de ganchos, roteiros e estrutura de conteúdo funcionam para clínicas, lojas, prestadores de serviço, marcas pessoais, cafeterias, concessionárias e qualquer negócio que queira aparecer nas redes.</div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-q">Precisa ter experiência com vídeos?</summary>
+          <div class="faq-a">Não. O ebook foi feito exatamente para quem está começando ou para quem posta mas não tem resultado. As técnicas são diretas, práticas e aplicáveis no mesmo dia.</div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-q">Por quanto tempo tenho acesso?</summary>
+          <div class="faq-a">O acesso é vitalício. Você recebe o arquivo em PDF e pode salvar onde quiser, sem prazo de validade. As atualizações também são incluídas gratuitamente.</div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-q">Precisa usar ChatGPT para aplicar o conteúdo?</summary>
+          <div class="faq-a">Não. O ebook funciona completamente sem IA. Os prompts de ChatGPT são um bônus para quem quiser acelerar ainda mais a produção, mas não são obrigatórios.</div>
+        </details>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta dark">
+  <div class="container">
+    <h2 class="reveal">Sua próxima venda pode estar a um <span class="accent">vídeo</span> de distância.</h2>
+    <p class="support">Você já tem o celular. Você já tem o negócio. O que faltava era a fórmula.</p>
+    <a href="https://pay.kiwify.com.br/X3sQTH7" class="btn-cta">Quero a Fórmula — R$ 17</a>
+    <span class="btn-sub">Acesso imediato · Pagamento único</span>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer dark">
+  <div class="container">
+    <div class="footer-top">
+      <svg class="logo" viewBox="78 78 1118 150" role="img" aria-label="Magno Agner — Vídeo e Estratégia"><g transform="translate(80.0,80.0)"><path fill="currentColor" d="M0.00 150.00 L0.00 0.00 L40.00 0.00 L74.50 51.75 L109.00 0.00 L149.00 0.00 L249.00 150.00 L209.00 150.00 L129.00 30.00 L74.50 111.75 L40.00 60.00 L40.00 150.00 Z"/><path fill="#D86A3C" d="M129.00 60.00 L189.00 150.00 L69.00 150.00 Z"/></g><path fill="currentColor" d="M378.6 163.15953927268833V85.15953927268833H407.39194630872487L417.33825503355706 115.52195538007089Q418.17583892617455 118.29645202436618 419.24899328859067 122.87698893711786Q420.32214765100673 127.45752584986954 421.4214765100671 132.6924251787286Q422.5208053691276 137.92732450758766 423.43691275167794 142.79578088342657Q424.35302013422825 147.66423725926552 424.9288590604027 151.17161980960108H421.4214765100672Q421.99731543624165 147.7165862525541 422.913422818792 142.84812987671518Q423.8295302013423 137.97967350087626 424.90268456375844 132.7185996753729Q425.97583892617456 127.45752584986954 427.0489932885906 122.90316343376216Q428.12214765100674 118.34880101765478 428.95973154362423 115.52195538007089L438.74899328859067 85.15953927268833H467.59328859060406V163.15953927268833H449.0093959731544V129.55148558141317Q449.0093959731544 126.93403591698363 449.1140939597316 122.82463994382928Q449.2187919463088 118.71524397067492 449.34966442953026 113.89913658812458Q449.48053691275175 109.08302920557423 449.6114093959732 104.18839833309102Q449.7422818791947 99.2937674606078 449.7422818791947 95.05349900423195H450.8416107382551Q449.89932885906046 99.71255940691651 448.6691275167786 104.68571376933262Q447.4389261744967 109.65886813174873 446.20872483221484 114.3702775277219Q444.97852348993297 119.08168692369505 443.85302013422825 123.00786142033934Q442.7275167785235 126.93403591698363 441.9422818791947 129.55148558141317L430.84429530201345 163.15953927268833H415.40134228187924L404.14630872483224 129.55148558141317Q403.3610738255034 126.98638491027222 402.2093959731544 123.06021041362793Q401.0577181208054 119.13403591698363 399.8013422818792 114.42262652101047Q398.54496644295307 109.71121712503732 397.2885906040269 104.73806276262121Q396.0322147651007 99.76490840020512 394.98523489932893 95.05349900423195H396.3463087248323Q396.39865771812083 99.18906947403062 396.50335570469804 104.05752584986953Q396.6080536912752 108.92598222570847 396.73892617449667 113.7944386015474Q396.86979865771815 118.66289497738632 397.00067114093963 122.77229095054068Q397.1315436241611 126.88168692369504 397.1315436241611 129.55148558141317V163.15953927268833Z M475.054067114094 163.15953927268833 501.0715167785235 85.15953927268833H525.8325906040269L552.6352751677853 163.15953927268833H531.9050738255035L521.0688322147652 129.08034464181586Q518.4513825503357 120.54745873577558 516.0171543624162 110.94141846731921Q513.5829261744967 101.33537819886283 511.1225234899329 91.02262652101048H515.2580939597316Q512.902389261745 101.38772719215142 510.70373154362426 110.99376746060778Q508.5050738255034 120.59980772906417 506.0446711409396 129.08034464181586L495.5748724832215 163.15953927268833ZM492.74802684563764 146.56490840020513V132.43068021228564H534.9936644295302V146.56490840020513Z M595.7457181208053 164.20651913846015Q584.6477315436241 164.20651913846015 576.219543624161 159.3642372592655Q567.7913557046979 154.5219553800709 563.0537718120805 145.57027752772188Q558.3161879194631 136.6185996753729 558.3161879194631 124.3165862525541Q558.3161879194631 111.543431890138 563.3155167785235 102.5655795411447Q568.3148456375839 93.58772719215142 576.7168590604026 88.85014329953397Q585.1188724832215 84.11255940691652 595.5363221476509 84.11255940691652Q602.2893422818792 84.11255940691652 608.0739060402684 86.04947215859437Q613.8584697986577 87.98638491027222 618.3866577181208 91.54611645389639Q622.9148456375839 95.10584799752054 625.7155167785235 99.94812987671517Q628.516187919463 104.79041175590982 629.2490738255034 110.60115001094337H610.5604832214765Q609.8799463087248 108.1930963196682 608.5973959731543 106.28235806463465Q607.3148456375839 104.37161980960109 605.4302818791946 103.03672048074202Q603.5457181208053 101.70182115188297 601.1638389261744 101.02128423913129Q598.7819597315436 100.34074732637961 595.8504161073826 100.34074732637961Q590.1967248322147 100.34074732637961 585.9826308724832 103.11524397067491Q581.7685369127516 105.88974061497021 579.491355704698 111.20316343376216Q577.2141744966443 116.5165862525541 577.2141744966443 124.05484128611116Q577.2141744966443 131.64544531295678 579.4390067114093 136.98504262839305Q581.6638389261744 142.32463994382928 585.8517583892617 145.15148558141317Q590.039677852349 147.97833121899706 595.9027651006711 147.97833121899706Q601.1900134228188 147.97833121899706 604.8282684563758 146.25081444047356Q608.4665234899329 144.52329766195007 610.3510872483221 141.30383457470174Q612.2356510067114 138.08437148745344 612.2356510067114 133.73940504450042L615.7430335570469 134.21054598409773H596.6356510067114V120.65215672235277H630.0866577181208V130.91255940691653Q630.0866577181208 141.33000907134604 625.6893422818791 148.7897406149702Q621.2920268456376 156.2494721585944 613.5182013422818 160.22799564852727Q605.7443758389262 164.20651913846015 595.7457181208053 164.20651913846015Z M639.693744966443 163.15953927268833V85.15953927268833H660.0051543624161L681.7823355704697 120.39041175590981Q683.8762953020134 123.89779430624537 685.8917315436241 127.64074732637961Q687.9071677852348 131.38370034651385 689.8964295302013 135.93806276262123Q691.8856912751678 140.4924251787286 693.9273020134228 146.40786142033934H692.1997852348993Q691.8856912751678 142.1152439706749 691.545422818792 136.88034464181584Q691.2051543624161 131.64544531295678 690.9434093959732 126.69846544718497Q690.6816644295302 121.75148558141316 690.6816644295302 118.34880101765478V85.15953927268833H709.632V163.15953927268833H689.2682416107382L669.3232751677853 130.86021041362793Q666.6534765100671 126.41054598409772 664.4809932885905 122.43202249416484Q662.3085100671141 118.45349900423196 660.1360268456376 113.7944386015474Q657.963543624161 109.13537819886284 655.032 102.85349900423196H657.1783087248322Q657.5447516778523 108.45484128611116 657.8850201342282 113.7682641049031Q658.225288590604 119.08168692369505 658.4346845637583 123.50517685658096Q658.6440805369127 127.92866678946686 658.6440805369127 130.86021041362793V163.15953927268833Z M756.0927785234899 164.20651913846015Q745.5706308724832 164.20651913846015 737.1686174496645 159.5474587357756Q728.7666040268456 154.888398333091 723.8457986577181 145.93672048074203Q718.9249932885906 136.98504262839305 718.9249932885906 124.21188826597692Q718.9249932885906 111.33403591698364 723.8457986577181 102.38235806463464Q728.7666040268456 93.43068021228565 737.1686174496645 88.77161980960108Q745.5706308724832 84.11255940691652 756.0927785234899 84.11255940691652Q766.562577181208 84.11255940691652 774.9645906040269 88.77161980960108Q783.3666040268456 93.43068021228565 788.2612348993289 102.38235806463464Q793.155865771812 111.33403591698364 793.155865771812 124.21188826597692Q793.155865771812 137.03739162168162 788.2612348993289 145.9890694740306Q783.3666040268456 154.9407473263796 774.9645906040269 159.57363323241987Q766.562577181208 164.20651913846015 756.0927785234899 164.20651913846015ZM756.0927785234899 147.97833121899706Q761.7464697986577 147.97833121899706 765.8296912751678 145.25618356799035Q769.9129127516778 142.53403591698364 772.1115704697986 137.22061309819168Q774.3102281879194 131.90719027939974 774.3102281879194 124.21188826597692Q774.3102281879194 116.46423725926552 772.1115704697986 111.12463994382927Q769.9129127516778 105.78504262839303 765.8296912751678 103.06289497738632Q761.7464697986577 100.34074732637961 756.0927785234899 100.34074732637961Q750.3867382550335 100.34074732637961 746.3035167785234 103.08906947403062Q742.2202953020134 105.83739162168162 740.0216375838926 111.15081444047357Q737.8229798657718 116.46423725926552 737.8229798657718 124.21188826597692Q737.8229798657718 131.90719027939974 740.0216375838926 137.1944386015474Q742.2202953020134 142.48168692369504 746.3035167785234 145.23000907134605Q750.3867382550335 147.97833121899706 756.0927785234899 147.97833121899706Z  M821.2693691275167 163.15953927268833 847.2868187919463 85.15953927268833H872.0478926174496L898.850577181208 163.15953927268833H878.1203758389261L867.2841342281879 129.08034464181586Q864.6666845637583 120.54745873577558 862.2324563758389 110.94141846731921Q859.7982281879194 101.33537819886283 857.3378255033557 91.02262652101048H861.4733959731543Q859.1176912751678 101.38772719215142 856.919033557047 110.99376746060778Q854.7203758389261 120.59980772906417 852.2599731543623 129.08034464181586L841.7901744966442 163.15953927268833ZM838.9633288590603 146.56490840020513V132.43068021228564H881.2089664429529V146.56490840020513Z M941.9610201342281 164.20651913846015Q930.8630335570468 164.20651913846015 922.4348456375837 159.3642372592655Q914.0066577181207 154.5219553800709 909.2690738255033 145.57027752772188Q904.5314899328858 136.6185996753729 904.5314899328858 124.3165862525541Q904.5314899328858 111.543431890138 909.5308187919462 102.5655795411447Q914.5301476510066 93.58772719215142 922.9321610738255 88.85014329953397Q931.3341744966442 84.11255940691652 941.7516241610738 84.11255940691652Q948.5046442953019 84.11255940691652 954.2892080536911 86.04947215859437Q960.0737718120804 87.98638491027222 964.6019597315435 91.54611645389639Q969.1301476510066 95.10584799752054 971.9308187919462 99.94812987671517Q974.7314899328858 104.79041175590982 975.4643758389261 110.60115001094337H956.7757852348992Q956.0952483221475 108.1930963196682 954.8126979865771 106.28235806463465Q953.5301476510066 104.37161980960109 951.6455838926173 103.03672048074202Q949.761020134228 101.70182115188297 947.3791409395972 101.02128423913129Q944.9972617449663 100.34074732637961 942.0657181208053 100.34074732637961Q936.4120268456375 100.34074732637961 932.1979328859059 103.11524397067491Q927.9838389261744 105.88974061497021 925.7066577181207 111.20316343376216Q923.429476510067 116.5165862525541 923.429476510067 124.05484128611116Q923.429476510067 131.64544531295678 925.6543087248322 136.98504262839305Q927.8791409395972 142.32463994382928 932.0670604026844 145.15148558141317Q936.2549798657717 147.97833121899706 942.1180671140938 147.97833121899706Q947.4053154362415 147.97833121899706 951.0435704697986 146.25081444047356Q954.6818255033556 144.52329766195007 956.5663892617449 141.30383457470174Q958.4509530201341 138.08437148745344 958.4509530201341 133.73940504450042L961.9583355704697 134.21054598409773H942.8509530201342V120.65215672235277H976.3019597315435V130.91255940691653Q976.3019597315435 141.33000907134604 971.904644295302 148.7897406149702Q967.5073288590603 156.2494721585944 959.7335033557047 160.22799564852727Q951.9596778523489 164.20651913846015 941.9610201342281 164.20651913846015Z M985.9090469798657 163.15953927268833V85.15953927268833H1006.2204563758388L1027.9976375838926 120.39041175590981Q1030.091597315436 123.89779430624537 1032.1070335570469 127.64074732637961Q1034.1224697986577 131.38370034651385 1036.111731543624 135.93806276262123Q1038.1009932885904 140.4924251787286 1040.1426040268454 146.40786142033934H1038.4150872483222Q1038.1009932885904 142.1152439706749 1037.7607248322147 136.88034464181584Q1037.4204563758387 131.64544531295678 1037.158711409396 126.69846544718497Q1036.8969664429528 121.75148558141316 1036.8969664429528 118.34880101765478V85.15953927268833H1055.8473020134227V163.15953927268833H1035.483543624161L1015.538577181208 130.86021041362793Q1012.8687785234898 126.41054598409772 1010.6962953020134 122.43202249416484Q1008.5238120805368 118.45349900423196 1006.3513288590602 113.7944386015474Q1004.1788456375838 109.13537819886284 1001.2473020134228 102.85349900423196H1003.3936107382549Q1003.7600536912751 108.45484128611116 1004.1003221476509 113.7682641049031Q1004.4405906040267 119.08168692369505 1004.6499865771812 123.50517685658096Q1004.8593825503355 127.92866678946686 1004.8593825503355 130.86021041362793V163.15953927268833Z M1066.9201610738253 163.15953927268833V85.15953927268833H1121.0490201342282V100.23604933980243H1085.3993557046979V116.35953927268832H1118.2221744966441V131.1219553800709H1085.3993557046979V148.08302920557423H1120.9966711409395V163.15953927268833Z M1131.2319463087247 163.15953927268833V85.15953927268833H1163.164832214765Q1171.9594630872482 85.15953927268833 1178.3460402684564 88.32665336664806Q1184.7326174496643 91.4937674606078 1188.1614765100671 97.30450571564135Q1191.5903355704697 103.11524397067491 1191.5903355704697 111.07229095054069Q1191.5903355704697 119.08168692369505 1188.082953020134 124.76155269550713Q1184.5755704697985 130.4414184673192 1178.0842953020133 133.3729620914803Q1171.593020134228 136.30450571564137 1162.6413422818791 136.30450571564137H1142.2775838926173V121.69913658812457H1159.2910067114094Q1163.6359731543623 121.69913658812457 1166.5413422818792 120.54745873577559Q1169.446711409396 119.3957808834266 1170.9386577181208 117.04007618544001Q1172.4306040268455 114.68437148745343 1172.4306040268455 111.07229095054069Q1172.4306040268455 107.40786142033934 1170.9386577181208 104.99980772906417Q1169.446711409396 102.591754037789 1166.5151677852348 101.36155269550713Q1163.5836241610737 100.13135135322524 1159.2386577181207 100.13135135322524H1149.7111409395973V163.15953927268833ZM1174.053422818792 163.15953927268833 1155.0507382550334 127.50987484315813H1174.8386577181207L1194.3124832214764 163.15953927268833Z"/><path fill="currentColor" d="M392.4479306470081 224.84046072731167 378.6 186.55953927268834H384.92020582405195L392.37085496622694 207.85811906187138Q393.1929955612256 210.32454084686725 394.2592091453644 213.8957140563925Q395.32542272950326 217.46688726591776 396.6870930899697 222.3226551551284H395.4795740910655Q396.81555255793825 217.36411969154295 397.8560742484834 213.8443302692051Q398.89659593902854 210.32454084686725 399.6930446404334 207.85811906187138L406.9381586338588 186.55953927268834H413.28405635150443L399.6159689596523 224.84046072731167Z M440.4763565310838 186.55953927268834V224.84046072731167H434.6186047917186V186.55953927268834ZM435.2609021315613 182.83421470160084 438.85776723468024 175.15233851708246H444.6898270804517L439.5771402553041 182.83421470160084Z M477.1746573403348 224.84046072731167H467.7200404978507V219.70208200857027H476.86635461721033Q481.2082846345468 219.70208200857027 484.085776717042 218.08349271216673Q486.96326879953716 216.46490341576322 488.4020148407848 213.3176464505341Q489.8407608820323 210.170389485305 489.8407608820323 205.64861621281258Q489.8407608820323 201.15253483391388 488.4148607875816 198.04381570907532Q486.9889606931309 194.9350965842368 484.17569834461995 193.31650728783325Q481.36243599610907 191.69791799142973 477.1746573403348 191.69791799142973H467.514505349101V186.55953927268834H477.5600357442404Q483.2122523348559 186.55953927268834 487.24587962906793 188.84611780252825Q491.27950692327994 191.13269633236817 493.43762598515127 195.41039661572037Q495.59574504702266 199.68809689907258 495.59574504702266 205.64861621281258Q495.59574504702266 211.6348274201463 493.42478003835447 215.92537365029534Q491.2538150296862 220.2159198804444 487.13026610789626 222.52819030387803Q483.0067171861063 224.84046072731167 477.1746573403348 224.84046072731167ZM470.59753258034584 186.55953927268834V224.84046072731167H464.73978084098064V186.55953927268834Z M518.497498996453 224.84046072731167V186.55953927268834H542.5964951873501V191.5951504170549H524.3552507358182V203.00235117266078H541.2862086140711V208.01227042343362H524.3552507358182V219.8048495829451H542.7506465489124V224.84046072731167Z M581.9667529303466 225.3542985991858Q577.0082174667612 225.3542985991858 573.0902036937209 223.00349033536162Q569.1721899206806 220.65268207153744 566.9241492312312 216.24652232021668Q564.6761085417819 211.84036256889596 564.6761085417819 205.7256918935937Q564.6761085417819 199.58532932469774 566.9241492312312 195.179169573377Q569.1721899206806 190.77300982205628 573.0902036937209 188.40935561143525Q577.0082174667612 186.0457014008142 581.9667529303466 186.0457014008142Q586.9252883939321 186.0457014008142 590.8176102733787 188.40935561143525Q594.7099321528252 190.77300982205628 596.9579728422746 195.179169573377Q599.206013531724 199.58532932469774 599.206013531724 205.7256918935937Q599.206013531724 211.84036256889596 596.9579728422746 216.24652232021668Q594.7099321528252 220.65268207153744 590.8176102733787 223.00349033536162Q586.9252883939321 225.3542985991858 581.9667529303466 225.3542985991858ZM581.9667529303466 220.01038473169476Q585.2296234167474 220.01038473169476 587.8116587229149 218.37894948849436Q590.3936940290824 216.74751424529398 591.8966698043143 213.54887349287748Q593.3996455795462 210.35023274046097 593.3996455795462 205.7256918935937Q593.3996455795462 201.04976725953904 591.8966698043143 197.85112650712253Q590.3936940290824 194.65248575470602 587.8116587229149 193.02105051150562Q585.2296234167474 191.38961526830525 581.9667529303466 191.38961526830525Q578.6781905503522 191.38961526830525 576.0833092973878 193.03389645830248Q573.4884280444234 194.6781776482997 571.9854522691915 197.87681840071622Q570.4824764939597 201.07545915313275 570.4824764939597 205.7256918935937Q570.4824764939597 210.35023274046097 571.9854522691915 213.53602754608062Q573.4884280444234 216.72182235170027 576.0833092973878 218.3661035416975Q578.6781905503522 220.01038473169476 581.9667529303466 220.01038473169476Z  M651.9463327008855 224.84046072731167V186.55953927268834H676.0453288917826V191.5951504170549H657.8040844402507V203.00235117266078H674.7350423185036V208.01227042343362H657.8040844402507V219.8048495829451H676.1994802533449V224.84046072731167Z  M729.2737940392245 224.84046072731167V186.55953927268834H753.3727902301216V191.5951504170549H735.1315457785897V203.00235117266078H752.0625036568426V208.01227042343362H735.1315457785897V219.8048495829451H753.5269415916839V224.84046072731167Z M789.6343288482796 225.48275806715435Q785.3437826181305 225.48275806715435 782.1836797061046 224.1210877066879Q779.0235767940786 222.7594173462214 777.237990189316 220.22876582724126Q775.4524035845534 217.69811430826113 775.2725603293974 214.204016779517H781.1560039623563Q781.3358472175122 216.28506016060726 782.5048283760259 217.64673052107372Q783.6738095345396 219.00840088154018 785.5493177668802 219.67639011497658Q787.4248259992207 220.34437934841296 789.6086369546858 220.34437934841296Q792.049366846088 220.34437934841296 793.9377210252255 219.5864684873986Q795.826075204363 218.82855762638425 796.9308266288924 217.42834942552722Q798.0355780534218 216.02814122467018 798.0355780534218 214.17832488592327Q798.0355780534218 212.50835180233233 797.0721320436578 211.4421382181935Q796.1086860338937 210.37592463405466 794.4772507906933 209.6693975602277Q792.845815547493 208.9628704864008 790.7647721664026 208.42334072093294L786.2943826810977 207.190129828435Q781.5927661534492 205.93122704234335 778.9593470600944 203.4648052573475Q776.3259279667394 200.99838347235163 776.3259279667394 197.06752375251446Q776.3259279667394 193.75326947892628 778.1115145715021 191.27400174713358Q779.8971011762646 188.79473401534085 782.9672824607126 187.42021770807753Q786.0374637451606 186.0457014008142 789.8912477842166 186.0457014008142Q793.8221075040537 186.0457014008142 796.8152131077206 187.42021770807753Q799.8083187113875 188.79473401534085 801.516829635369 191.18408011955557Q803.2253405593506 193.57342622377033 803.3024162401316 196.63076156142145H797.5988158623287Q797.3162050327979 194.01018841486334 795.1709319177235 192.57144237361575Q793.0256588026489 191.13269633236817 789.7627883162481 191.13269633236817Q787.4505178928144 191.13269633236817 785.7420069688329 191.85206935299198Q784.0334960448514 192.57144237361575 783.0957419286812 193.84319110650426Q782.1579878125109 195.11493983939275 782.1579878125109 196.7335291357963Q782.1579878125109 198.55765358094948 783.2755851838372 199.67525095227572Q784.3931825551633 200.79284832360196 785.99892590477 201.4479916102415Q787.6046692543767 202.10313489688102 789.069107189218 202.48851330078662L792.7944317603055 203.4648052573475Q794.6185562054587 203.92725934203423 796.5582941717836 204.7108620966423Q798.4980321381084 205.49446485125034 800.1423133281057 206.7405216905451Q801.7865945181029 207.9865785298399 802.8014243150544 209.82354892178995Q803.8162541120058 211.66051931374 803.8162541120058 214.2554005667044Q803.8162541120058 217.49257915951148 802.1462810284149 220.03607662528847Q800.4763079448239 222.57957409106547 797.3033590860011 224.0311660791099Q794.1304102271782 225.48275806715435 789.6343288482796 225.48275806715435Z M824.6369646803458 191.5951504170549V186.55953927268834H854.3624855682648V191.5951504170549H842.4671388343785V224.84046072731167H836.5836952014196V191.5951504170549Z M876.6990178586336 224.84046072731167V186.55953927268834H890.4184890376731Q894.8374947357908 186.55953927268834 897.792062499067 188.0882069415139Q900.7466302623434 189.61687461033947 902.2110681971847 192.34021533127242Q903.6755061320259 195.06355605220534 903.6755061320259 198.5833454745432Q903.6755061320259 202.12882679047473 902.1982222503877 204.7879377774234Q900.7209383687497 207.44704876437208 897.7663706054734 208.91148669921336Q894.811802842197 210.37592463405466 890.3671052504857 210.37592463405466H880.0646559194092V205.36600538328182H889.8018835914241Q892.6279918867319 205.36600538328182 894.3621947043072 204.55671073508006Q896.0963975218824 203.74741608687827 896.918538116881 202.23159436484957Q897.7406787118796 200.71577264282087 897.7406787118796 198.5833454745432Q897.7406787118796 196.4252264126718 896.918538116881 194.85802090345567Q896.0963975218824 193.29081539423956 894.3493487575104 192.43013695885037Q892.6022999931382 191.56945852346118 889.7504998042367 191.56945852346118H882.5567695979988V224.84046072731167ZM898.4600517325034 224.84046072731167 889.1852781451752 207.5498163387469H895.6853272243831L905.1142521732735 224.84046072731167Z M923.6483842117738 224.84046072731167 937.2650878164384 186.55953927268834H944.4588180226764L958.332440563278 224.84046072731167H951.9865428456325L944.5358937034574 203.54188093812863Q943.6623693212714 200.9469996851642 942.6218476307263 197.42721026282635Q941.5813259401812 193.90742084048853 940.2196555797148 188.97457727049678H941.4014826850253Q940.0911961117462 193.95880462767593 939.050674421201 197.51713189040436Q938.0101527306559 201.07545915313275 937.213704029251 203.54188093812863L929.9942819294193 224.84046072731167ZM931.0219576731677 214.74354654498484V209.86208676218052H950.9331752082905V214.74354654498484Z M977.7400969839642 191.5951504170549V186.55953927268834H1007.4656178718832V191.5951504170549H995.5702711379969V224.84046072731167H989.686827505038V191.5951504170549Z M1029.802150162252 224.84046072731167V186.55953927268834H1053.901146353149V191.5951504170549H1035.659901901617V203.00235117266078H1052.59085977987V208.01227042343362H1035.659901901617V219.8048495829451H1054.0552977147113V224.84046072731167ZM1039.6678373022353 182.83421470160084 1043.2647024053542 175.15233851708246H1049.0967622511257L1043.984075425978 182.83421470160084Z M1093.399863564114 225.3542985991858Q1088.2101010581853 225.3542985991858 1084.292087285145 222.96495249497104Q1080.3740735121046 220.57560639075632 1078.1774166098426 216.1694466394356Q1075.9807597075808 211.76328688811483 1075.9807597075808 205.7256918935937Q1075.9807597075808 199.61102121829146 1078.2031085034364 195.20486146697073Q1080.425457299292 190.79870171564997 1084.3049332319417 188.42220155823208Q1088.1844091645914 186.0457014008142 1093.142944628177 186.0457014008142Q1096.2259718594219 186.0457014008142 1098.9107747399642 186.9577636233908Q1101.5955776205064 187.8698258459674 1103.7151588419874 189.5526448763552Q1105.8347400634682 191.235463906743 1107.2092563707315 193.5605802769735Q1108.5837726779948 195.88569664720396 1109.0462267626815 198.6604211553243H1103.0343236617541Q1102.52048578988 196.99044807173334 1101.6212695141003 195.64162365806374Q1100.7220532383205 194.29279924439413 1099.4759963990257 193.34219918142696Q1098.2299395597308 192.3915991184598 1096.6498881037178 191.89060719338252Q1095.069836647705 191.38961526830525 1093.1943284153645 191.38961526830525Q1089.9571498225573 191.38961526830525 1087.3751145163897 193.03389645830248Q1084.7930792102222 194.6781776482997 1083.2901034349902 197.87681840071622Q1081.7871276597584 201.07545915313275 1081.7871276597584 205.7Q1081.7871276597584 210.32454084686725 1083.2901034349902 213.5103356524869Q1084.7930792102222 216.69613045810655 1087.4136523567804 218.35325759490064Q1090.0342255033383 220.01038473169476 1093.4255554577078 220.01038473169476Q1096.5085826889526 220.01038473169476 1098.8080071655895 218.7643278924Q1101.1074316422262 217.5182710531052 1102.3791803751146 215.21884657646842Q1103.650929108003 212.91942209983165 1103.650929108003 209.7850110813994L1105.1667508300318 210.04193001733648H1094.2733879463V205.21185402171957H1109.3802213793997V209.60516782624345Q1109.3802213793997 214.43524382186035 1107.3120239451064 217.96787919099506Q1105.2438265108128 221.50051456012977 1101.6469614076939 223.42740657965777Q1098.050096304575 225.3542985991858 1093.399863564114 225.3542985991858Z M1138.2938784297576 186.55953927268834V224.84046072731167H1132.4361266903925V186.55953927268834Z M1159.6284268699717 224.84046072731167 1173.2451304746364 186.55953927268834H1180.4388606808743L1194.3124832214762 224.84046072731167H1187.9665855038306L1180.5159363616556 203.54188093812863Q1179.6424119794694 200.9469996851642 1178.6018902889243 197.42721026282635Q1177.5613685983792 193.90742084048853 1176.1996982379128 188.97457727049678H1177.3815253432233Q1176.071238769944 193.95880462767593 1175.030717079399 197.51713189040436Q1173.9901953888539 201.07545915313275 1173.193746687449 203.54188093812863L1165.9743245876173 224.84046072731167ZM1167.0020003313657 214.74354654498484V209.86208676218052H1186.9132178664886V214.74354654498484Z"/></svg>
+      <span class="footer-sign">MAGNO<b>|</b>VÍDEO &amp; ESTRATÉGIA</span>
+    </div>
+    <div class="footer-bottom">
+      <p>
+        <a href="https://instagram.com/magnoagner">@magnoagner</a> ·
+        (31) 97509-8953 ·
+        Belo Horizonte, MG
+      </p>
+      <p>© 2026 Magno Agner · Todos os direitos reservados</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Sticky bar on scroll
+  const bar = document.getElementById('stickyBar');
+  window.addEventListener('scroll', () => {
+    bar.classList.toggle('visible', window.scrollY > 600);
+  }, { passive: true });
+
+  // Timecode do celular (00:00:00 → 00:00:03, em loop, junto com a barra)
+  const tc = document.getElementById('timecode');
+  if (tc) {
+    const start = performance.now();
+    const tick = (now) => {
+      const t = ((now - start) / 1000) % 3;
+      const s = Math.floor(t);
+      const f = Math.floor((t - s) * 30);
+      tc.textContent = '00:0' + s + ':' + String(f).padStart(2, '0');
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  // Animações ao rolar
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach((el, i) => {
+    el.style.transitionDelay = (i % 4) * 70 + 'ms';
+    obs.observe(el);
+  });
+</script>
+</body>
+</html>
